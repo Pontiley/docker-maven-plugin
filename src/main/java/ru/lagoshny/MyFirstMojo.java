@@ -6,8 +6,10 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.IOUtil;
 import org.codehaus.plexus.util.StringUtils;
+import org.yaml.snakeyaml.Yaml;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
@@ -119,10 +121,13 @@ abstract class MyFirstMojo extends AbstractMojo {
 
 
 
-//        InputStreamReader streamReader = new InputStreamReader(new FileInputStream(composeFilePath));
-//        Yaml yaml2 = new Yaml();
-//        Map config = (Map) yaml2.load(streamReader);
-//        getLog().error("CONTAINER NAME: " + config.get("services"));
+        InputStreamReader streamReader = new InputStreamReader(new FileInputStream(composeFilePath));
+        Yaml yaml2 = new Yaml();
+        Map config = (Map) yaml2.load(streamReader);
+        Map services = (Map) config.get("services");
+
+        getLog().error("CONTAINER NAME: " + services.get(containerName));
+
 //        getLog().error("CONTAINER NAME2: " + config.toString());
 
 
@@ -132,7 +137,7 @@ abstract class MyFirstMojo extends AbstractMojo {
         String content = new String(Files.readAllBytes(Paths.get(composeFilePath)));
         content = StringUtils.replace(content, "${target_file}", appName);
 
-        getLog().error("Dockerfile: " + content);
+//        getLog().error("Dockerfile: " + content);
 
 
         Files.write(Paths.get(this.composeFile), content.getBytes());
