@@ -33,6 +33,8 @@ public class DockerComposeUpMojo extends MyFirstMojo {
             args.add("-d");
         }
 
+        args.add(containerName);
+
 //        args.add("--no-color");
 
         super.execute(args);

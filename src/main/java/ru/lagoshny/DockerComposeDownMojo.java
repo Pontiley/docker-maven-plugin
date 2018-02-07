@@ -33,6 +33,8 @@ public class DockerComposeDownMojo extends MyFirstMojo {
             args.add("-v");
         }
 
+        args.add(containerName);
+
         super.execute(args);
     }
 

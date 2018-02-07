@@ -6,15 +6,18 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.IOUtil;
 import org.codehaus.plexus.util.StringUtils;
+import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.Constructor;
+import org.yaml.snakeyaml.nodes.Tag;
+import org.yaml.snakeyaml.representer.Representer;
+import ru.lagoshny.parser.RootConfig;
+import ru.lagoshny.parser.ServiceConfig;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.file.Files;
+import java.io.*;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -116,31 +119,35 @@ abstract class MyFirstMojo extends AbstractMojo {
         String composeFilePath = Paths.get(this.composeFile).toString();
 
 
-//        Yaml yaml = new Yaml(new Constructor(DockerComposeYaml.class));
-//        DockerComposeYaml load = (DockerComposeYaml) yaml.load(new StringReader(composeFilePath));
+        Yaml yaml = new Yaml(new Constructor(RootConfig.class));
+        RootConfig load = yaml.load(new InputStreamReader(new FileInputStream(composeFilePath)));
+        ServiceConfig serviceConfig = load.getServices().get(containerName);
 
 
+        if (serviceConfig.getBuild().getArgs() == null) {
+            Map<String, String> arguments = new HashMap<>();
+            arguments.put("JAR_FILE", "./target/" + appName);
+            serviceConfig.getBuild().setArgs(arguments);
+        } else {
+            serviceConfig.getBuild().getArgs().put("JAR_FILE", "./target/" + appName);
+        }
 
-        InputStreamReader streamReader = new InputStreamReader(new FileInputStream(composeFilePath));
-        Yaml yaml2 = new Yaml();
-        Map config = (Map) yaml2.load(streamReader);
-        Map services = (Map) config.get("services");
-
-        getLog().error("CONTAINER NAME: " + services.get(containerName));
-
-//        getLog().error("CONTAINER NAME2: " + config.toString());
-
-
-
+        serviceConfig.getEntrypoint().remove(serviceConfig.getEntrypoint().size() - 1);
+        serviceConfig.getEntrypoint().add("project/" + appName);
 
 
-        String content = new String(Files.readAllBytes(Paths.get(composeFilePath)));
-        content = StringUtils.replace(content, "${target_file}", appName);
+        Representer representer = new Representer();
+        representer.addClassTag(RootConfig.class, Tag.MAP);
 
-//        getLog().error("Dockerfile: " + content);
+        DumperOptions options = new DumperOptions();
+        options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
 
+        FileWriter writer = new FileWriter(composeFilePath);
 
-        Files.write(Paths.get(this.composeFile), content.getBytes());
+        new Yaml(representer, options).dump(load, writer);
+
+        getLog().error("CONTAINER NAME: " + serviceConfig.getBuild().getArgs());
+
 
 
         List<String> cmd = new ArrayList<>();
