@@ -12,12 +12,30 @@ import java.util.List;
 @ToString
 public class ServiceConfig {
 
+    private Boolean stdin_open;
+    private Boolean tty;
     private String image;
     private BuildConfig build = new BuildConfig();
     private String container_name;
     private List<String> volumes = new ArrayList<>();
     private List<String> ports = new ArrayList<>();
     private List<String> entrypoint = new ArrayList<>();
+
+    public Boolean getTty() {
+        return tty;
+    }
+
+    public void setTty(Boolean tty) {
+        this.tty = tty;
+    }
+
+    public Boolean getStdin_open() {
+        return stdin_open;
+    }
+
+    public void setStdin_open(Boolean stdin_open) {
+        this.stdin_open = stdin_open;
+    }
 
     public String getImage() {
         return image;

@@ -15,7 +15,7 @@ import java.util.List;
  * @version 1.0
  */
 @Mojo(name = "down", threadSafe = true)
-public class DockerComposeDownMojo extends MyFirstMojo {
+public class DockerComposeDownMojo extends AbstractDockerCompose {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {

@@ -15,7 +15,7 @@ import java.util.List;
  * @version 1.0
  */
 @Mojo(name = "up", threadSafe = true)
-public class DockerComposeUpMojo extends MyFirstMojo {
+public class DockerComposeUpMojo extends AbstractDockerCompose {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -32,6 +32,7 @@ public class DockerComposeUpMojo extends MyFirstMojo {
             getLog().info("Running in detached mode");
             args.add("-d");
         }
+//        args.add("-d");
 
         args.add(containerName);
 

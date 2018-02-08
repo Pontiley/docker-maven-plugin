@@ -28,41 +28,23 @@ import java.util.Map;
  * @author Ilya_lagoshnyj@epam.com
  * @version 1.0
  */
-abstract class MyFirstMojo extends AbstractMojo {
+abstract class AbstractDockerCompose extends AbstractMojo {
 
-    /**
-     * Remove volumes on down
-     */
     @Parameter(defaultValue = "false", property = "dockerCompose.removeVolumes")
     boolean removeVolumes;
 
-    /**
-     * Run in detached mode
-     */
     @Parameter(defaultValue = "false", property = "dockerCompose.detached")
     protected boolean detachedMode;
 
-    /**
-     * The location of the Compose file
-     */
     @Parameter(defaultValue = "${project.basedir}/src/main/resources/docker-compose.yml", property = "dockerCompose.file")
     private String composeFile;
 
-    /**
-     * The Compose Api Version
-     */
     @Parameter(property = "dockerCompose.apiVersion")
     private ComposeApiVersion apiVersion;
 
-    /**
-     * Verbose
-     */
     @Parameter(defaultValue = "false", property = "dockerCompose.verbose")
     private boolean verbose;
 
-    /**
-     * Skip
-     */
     @Parameter(defaultValue = "false", property = "dockerCompose.skip")
     boolean skip;
 
@@ -71,6 +53,9 @@ abstract class MyFirstMojo extends AbstractMojo {
 
     @Parameter()
     String containerName;
+
+    @Parameter()
+    String projectDir;
 
     public void execute(List<String> args) throws MojoExecutionException, MojoFailureException {
 
@@ -126,10 +111,21 @@ abstract class MyFirstMojo extends AbstractMojo {
 
         if (serviceConfig.getBuild().getArgs() == null) {
             Map<String, String> arguments = new HashMap<>();
-            arguments.put("JAR_FILE", "./target/" + appName);
+            arguments.put("JAR_FILE", projectDir + "/target/" + appName);
             serviceConfig.getBuild().setArgs(arguments);
         } else {
-            serviceConfig.getBuild().getArgs().put("JAR_FILE", "./target/" + appName);
+            serviceConfig.getBuild().getArgs().put("JAR_FILE", projectDir + "/target/" + appName);
+        }
+
+        String targetDir = projectDir + "/target:/project";
+
+        if (serviceConfig.getVolumes() == null) {
+            List<String> volumes = new ArrayList<>();
+            volumes.add(targetDir);
+            serviceConfig.setVolumes(volumes);
+        } else {
+            serviceConfig.getVolumes().remove(targetDir);
+            serviceConfig.getVolumes().add(targetDir);
         }
 
         serviceConfig.getEntrypoint().remove(serviceConfig.getEntrypoint().size() - 1);
@@ -235,5 +231,9 @@ abstract class MyFirstMojo extends AbstractMojo {
 
     public String getContainerName() {
         return containerName;
+    }
+
+    public String getProjectDir() {
+        return projectDir;
     }
 }
