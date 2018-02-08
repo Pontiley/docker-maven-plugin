@@ -20,6 +20,9 @@ public class ServiceConfig {
     private List<String> volumes = new ArrayList<>();
     private List<String> ports = new ArrayList<>();
     private List<String> entrypoint = new ArrayList<>();
+    private List<String> networks = new ArrayList<>();
+    private DeployConfig deploy = new DeployConfig();
+    private List<String>  depends_on = new ArrayList<>();
 
     public Boolean getTty() {
         return tty;
@@ -83,5 +86,21 @@ public class ServiceConfig {
 
     public void setEntrypoint(List<String> entrypoint) {
         this.entrypoint = entrypoint;
+    }
+
+    public List<String> getNetworks() {
+        return networks;
+    }
+
+    public void setNetworks(List<String> networks) {
+        this.networks = networks;
+    }
+
+    public DeployConfig getDeploy() {
+        return deploy;
+    }
+
+    public void setDeploy(DeployConfig deploy) {
+        this.deploy = deploy;
     }
 }

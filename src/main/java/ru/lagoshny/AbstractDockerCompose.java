@@ -142,9 +142,6 @@ abstract class AbstractDockerCompose extends AbstractMojo {
 
         new Yaml(representer, options).dump(load, writer);
 
-        getLog().error("CONTAINER NAME: " + serviceConfig.getBuild().getArgs());
-
-
 
         List<String> cmd = new ArrayList<>();
         cmd.add("docker-compose");
