@@ -40,7 +40,6 @@ public class DockerComposeUpMojo extends AbstractDockerCompose {
         if (needBuild) {
             getLog().info("Running in build mode");
             args.add("--build");
-            args.add("--force-rm");
         }
 
         args.add(containerName);
