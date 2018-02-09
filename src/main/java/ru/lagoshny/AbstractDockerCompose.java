@@ -6,18 +6,11 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.IOUtil;
 import org.codehaus.plexus.util.StringUtils;
-import org.yaml.snakeyaml.DumperOptions;
-import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.constructor.Constructor;
-import org.yaml.snakeyaml.nodes.Tag;
-import org.yaml.snakeyaml.representer.Representer;
-import ru.lagoshny.parser.RootConfig;
-import ru.lagoshny.parser.ServiceConfig;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -36,26 +29,26 @@ abstract class AbstractDockerCompose extends AbstractMojo {
     @Parameter(defaultValue = "false", property = "dockerCompose.detached")
     protected boolean detachedMode;
 
-    @Parameter(defaultValue = "${project.basedir}/src/main/resources/docker-compose.yml", property = "dockerCompose.file")
+    @Parameter()
     private String composeFile;
 
     @Parameter(property = "dockerCompose.apiVersion")
     private ComposeApiVersion apiVersion;
 
-    @Parameter(defaultValue = "false", property = "dockerCompose.verbose")
+    @Parameter(defaultValue = "false")
     private boolean verbose;
 
-    @Parameter(defaultValue = "false", property = "dockerCompose.skip")
+    @Parameter(defaultValue = "false")
     boolean skip;
 
     @Parameter()
-    String appName;
+    private String appName;
 
     @Parameter()
-    String containerName;
+    private String projectDir;
 
     @Parameter()
-    String projectDir;
+    protected String containerName;
 
     public void execute(List<String> args) throws MojoExecutionException, MojoFailureException {
 
@@ -87,11 +80,8 @@ abstract class AbstractDockerCompose extends AbstractMojo {
     private ProcessBuilder buildProcess(List<String> args) {
 
         List<String> command = null;
-        try {
-            command = buildCmd(args);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
+        command = buildCmd(args);
 
         ProcessBuilder pb = new ProcessBuilder(command).inheritIO();
 
@@ -100,53 +90,20 @@ abstract class AbstractDockerCompose extends AbstractMojo {
         return pb;
     }
 
-    private List<String> buildCmd(List<String> args) throws IOException {
-        String composeFilePath = Paths.get(this.composeFile).toString();
-
-
-        Yaml yaml = new Yaml(new Constructor(RootConfig.class));
-        RootConfig load = yaml.load(new InputStreamReader(new FileInputStream(composeFilePath)));
-        ServiceConfig serviceConfig = load.getServices().get(containerName);
-
-
-        if (serviceConfig.getBuild().getArgs() == null) {
-            Map<String, String> arguments = new HashMap<>();
-            arguments.put("JAR_FILE", projectDir + "/target/" + appName);
-            serviceConfig.getBuild().setArgs(arguments);
-        } else {
-            serviceConfig.getBuild().getArgs().put("JAR_FILE", projectDir + "/target/" + appName);
-        }
-
-        String targetDir = projectDir + "/target:/project";
-
-        if (serviceConfig.getVolumes() == null) {
-            List<String> volumes = new ArrayList<>();
-            volumes.add(targetDir);
-            serviceConfig.setVolumes(volumes);
-        } else {
-            serviceConfig.getVolumes().remove(targetDir);
-            serviceConfig.getVolumes().add(targetDir);
-        }
-
-        serviceConfig.getEntrypoint().remove(serviceConfig.getEntrypoint().size() - 1);
-        serviceConfig.getEntrypoint().add("project/" + appName);
-
-
-        Representer representer = new Representer();
-        representer.addClassTag(RootConfig.class, Tag.MAP);
-
-        DumperOptions options = new DumperOptions();
-        options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
-
-        FileWriter writer = new FileWriter(composeFilePath);
-
-        new Yaml(representer, options).dump(load, writer);
-
+    private List<String> buildCmd(List<String> args) {
 
         List<String> cmd = new ArrayList<>();
         cmd.add("docker-compose");
-//        cmd.add("-f");
-//        cmd.add(composeFilePath);
+
+        String composeFilePath = "";
+
+        if (this.composeFile != null) {
+            composeFilePath = Paths.get(this.composeFile).toString();
+            if (StringUtils.isNotEmpty(composeFilePath)) {
+                cmd.add("-f");
+                cmd.add(composeFilePath);
+            }
+        }
 
         if (verbose) {
             cmd.add("--verbose");
@@ -226,11 +183,11 @@ abstract class AbstractDockerCompose extends AbstractMojo {
         return appName;
     }
 
-    public String getContainerName() {
-        return containerName;
-    }
-
     public String getProjectDir() {
         return projectDir;
+    }
+
+    public String getContainerName() {
+        return containerName;
     }
 }

@@ -3,6 +3,7 @@ package ru.lagoshny;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +17,9 @@ import java.util.List;
  */
 @Mojo(name = "up", threadSafe = true)
 public class DockerComposeUpMojo extends AbstractDockerCompose {
+
+    @Parameter(defaultValue = "false")
+    private boolean needBuild;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -32,13 +36,20 @@ public class DockerComposeUpMojo extends AbstractDockerCompose {
             getLog().info("Running in detached mode");
             args.add("-d");
         }
-//        args.add("-d");
+
+        if (needBuild) {
+            getLog().info("Running in build mode");
+            args.add("--build");
+            args.add("--force-rm");
+        }
 
         args.add(containerName);
 
-//        args.add("--no-color");
-
         super.execute(args);
+    }
+
+    public boolean isNeedBuild() {
+        return needBuild;
     }
 
 }
