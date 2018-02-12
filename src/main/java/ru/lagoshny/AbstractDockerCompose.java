@@ -125,6 +125,7 @@ abstract class AbstractDockerCompose extends AbstractMojo {
         START("start"),
         STOP("stop"),
         UP("up"),
+        BUILD("build"),
         DOWN("down");
 
         @SuppressWarnings("unused")
